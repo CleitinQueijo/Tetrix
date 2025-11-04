@@ -95,6 +95,32 @@
       /* Evita que clique afete a imagem */
     }
 
+    /* NOVO: estilos para links de desenvolvedores */
+    .dev-links {
+      margin-top: 18px;
+      background: rgba(255, 200, 28, 0.95);
+      border: 4px solid #000;
+      padding: 12px 18px;
+      border-radius: 12px;
+      display: flex;
+      gap: 16px;
+      flex-direction: column;
+      align-items: center;
+      font-weight: bold;
+      color: #000;
+    }
+    .dev-links a {
+      color: #000;
+      text-decoration: none;
+      border-bottom: 2px dashed rgba(0,0,0,0.15);
+      padding-bottom: 2px;
+      font-size: 1.1rem;
+    }
+    .dev-links a:hover {
+      text-decoration: underline;
+      transform: scale(1.02);
+    }
+
     #custom-notification {
       position: fixed;
       /* Fixa notificação na tela */
@@ -325,7 +351,7 @@
       cursor: pointer;
       /* Muda cursor */
       transition: transform 0.2s ease-in-out;
-      /* Animação ao passar mouse */
+      /* Animação ao passar o mouse */
     }
 
     #jogo .game-container {
@@ -893,6 +919,9 @@
     </div>
     <div class="menu-content">
       <button class="start-btn" onclick="startFromMenu()">START</button>
+      <div style="position:absolute; left:40px; bottom:40px;">
+        <button onclick="showScreen('settings')">CONFIGURAÇÕES</button>
+      </div>
       </div>
   </div>
 
@@ -918,6 +947,15 @@
           <button id="btn-resume"><img src="https://cdn-icons-png.flaticon.com/512/16/16427.png" alt="Continuar" /></button>
           <button id="btn-menu"><img src="https://cdn-icons-png.flaticon.com/512/7216/7216128.png" alt="Menu" /></button>
           </div>
+
+        <!-- NOVO: links dos desenvolvedores na tela de pausa -->
+        <div class="dev-links" aria-label="Desenvolvedores">
+          <div>Desenvolvedores:</div>
+          <a href="https://github.com/ShadowNote012" target="_blank" rel="noopener">Luiz</a>
+          <a href="https://github.com/AlmightyBeef" target="_blank" rel="noopener">Gabriel Furtado</a>
+          <a href="https://github.com/CleitinQueijo" target="_blank" rel="noopener">Gabriel Santos</a>
+          <a href="https://github.com/rodriguessoaresarthurmiguel-lgtm" target="_blank" rel="noopener">Arthur</a>
+        </div>
       </div>
 
       <div class="game-board">
@@ -933,6 +971,66 @@
       </div>
     </div>
   </div>
+
+  <!-- NOVA TELA: CONFIGURAÇÕES -->
+  <div id="settings" class="screen">
+  <img class="bg-image" src="https://uploads.onecompiler.io/43rztn6g5/43u9gqwxd/11.png" alt="Fundo Configurações">
+
+  <!-- PAINEL CENTRAL COM FUNDO AMARELO -->
+  <div style="
+    background: #ffc81c;
+    width: 500px;
+    height: 600px;
+    border: 5px solid #000;
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding-top: 30px;
+    text-align: center;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+  ">
+    <h2 style="
+      color:#000;
+      background:#deb02a;
+      padding:10px 30px;
+      border-radius:10px;
+      margin-bottom:20px;
+    ">CONFIGURAÇÕES</h2>
+
+    <div style="margin-top:10px;">
+      <label for="volume" style="color:black; font-weight:bold;">Volume:</label>
+      <input type="range" id="volume" min="0" max="1" step="0.05" value="0.5"
+        oninput="setVolume(this.value)" style="width:200px;">
+    </div>
+
+    <div style="margin-top:25px;">
+      <button id="sound-toggle" onclick="toggleSound()">Desligar Som</button>
+    </div>
+
+    <h3 style="color:black; margin-top:40px;">Desenvolvedores</h3>
+
+    <div class="dev-links" style="
+      background: rgba(255,200,28,0.95);
+      width: 80%;
+      text-align:center;
+      border: 3px solid #000;
+      border-radius:12px;
+      padding:10px 15px;
+      margin-top:10px;
+    ">
+      <a href="https://github.com/ShadowNote012" target="_blank" rel="noopener">Luiz — @ShadowNote012</a>
+      <a href="https://github.com/AlmightyBeef" target="_blank" rel="noopener">Gabriel Furtado — @AlmightyBeef</a>
+      <a href="https://github.com/CleitinQueijo" target="_blank" rel="noopener">Gabriel Santos — @CleitinQueijo</a>
+      <a href="https://github.com/rodriguessoaresarthurmiguel-lgtm" target="_blank" rel="noopener">Arthur — @rodriguessoaresarthurmiguel-lgtm</a>
+    </div>
+
+    <div class="row" style="margin-top:25px;">
+      <button onclick="showScreen('menu')">VOLTAR</button>
+    </div>
+  </div>
+</div>
 
   <div id="score-screen" class="screen">
     <img class="bg-image" src="https://uploads.onecompiler.io/43rztn6g5/43u9gqwxd/12.png" alt="Fundo Score">
@@ -1021,8 +1119,46 @@
       }
     });
 
+    // ======= TRILHA SONORA =======
+    const bgMusic = new Audio("Battle Ready.mp3");
+    bgMusic.loop = true;
+    bgMusic.volume = 0.5; // volume inicial médio
+    let musicEnabled = true;
 
+    function playMusic() {
+      if (!musicEnabled) return;
+      bgMusic.play().catch(err => {
+        // autoplay pode falhar em navegadores sem interação; silêncio o erro
+        // console.log("Erro ao tocar música:", err);
+      });
+    }
 
+    function pauseMusic() {
+      try {
+        bgMusic.pause();
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    function setVolume(value) {
+      const v = parseFloat(value);
+      bgMusic.volume = v;
+      // Atualiza valor do slider caso seja chamado por código
+      const volEl = document.getElementById('volume');
+      if (volEl) volEl.value = v;
+    }
+
+    function toggleSound() {
+      musicEnabled = !musicEnabled;
+      if (musicEnabled) {
+        playMusic();
+        document.getElementById("sound-toggle").textContent = "Desligar Som";
+      } else {
+        pauseMusic();
+        document.getElementById("sound-toggle").textContent = "Ligar Som";
+      }
+    }
 
     // Botão "Retomar" do menu de pausa
     document.getElementById("btn-resume").addEventListener("click", () => {
@@ -1032,6 +1168,8 @@
       document.getElementById("pause-screen").style.display = "none"; // Oculta overlay de pausa
       game.lastTime = 0; // Reseta temporizador
       game.loopId = requestAnimationFrame(game.update.bind(game)); // Retoma loop de atualização
+      // retoma música se estiver habilitado
+      playMusic();
     });
 
     // Botão "Reiniciar" do menu de pausa
@@ -1041,6 +1179,8 @@
       isPaused = false; // Remove pausa
       document.getElementById("pause-screen").style.display = "none"; // Oculta overlay
       console.log("Jogo reiniciado"); // Debug
+      // toca música novamente
+      playMusic();
     });
 
     // Botão "Menu" do menu de pausa
@@ -1048,6 +1188,8 @@
       isPaused = false; // Remove pausa
       document.getElementById("pause-screen").style.display = "none"; // Oculta overlay
       showScreen('menu'); // Mostra tela de menu
+      // pausa música ao voltar ao menu
+      pauseMusic();
     });
 
     // Botão de retorno da tela INSANE
@@ -1069,8 +1211,13 @@
 
         // retoma cronômetro
         startTimer();
+
+        // retoma música
+        playMusic();
       }
     });
+
+
 
 
     // Função para exibir notificações temporárias
@@ -1516,6 +1663,9 @@
 
         // Mostra a tela de menu
         showScreen("menu");
+
+        // Pausa música ao ir para o menu
+        pauseMusic();
       }
 
       finish() {
@@ -1530,6 +1680,9 @@
         document.getElementById('score-user').textContent = currentUser ? `Player: ${currentUser}` : 'Player: Guest';
         document.getElementById('final-score').textContent = this.score;
         document.getElementById('high-score').textContent = localStorage.getItem(key) || '0';
+
+        // Pausa música no fim do jogo
+        pauseMusic();
 
         showScreen('score-screen'); // Mostra tela de pontuação final
       }
@@ -1577,8 +1730,12 @@
             if (!this.paused) {
               this.lastTime = 0;
               this.loopId = requestAnimationFrame(this.update.bind(this));
+              // retoma música ao despausar
+              playMusic();
             } else {
               cancelAnimationFrame(this.loopId);
+              // pausa música ao pausar
+              pauseMusic();
             }
             break;
           case 'Escape':
@@ -1630,8 +1787,6 @@
           this.loopId = requestAnimationFrame(this.update.bind(this));
         }
       }
-
-
 
       /* ======= Desenho ======= */
       clearBoard() {
@@ -1743,12 +1898,17 @@
       // Inicia o cronômetro
       stopTimer();
       startTimer();
+
+      // toca música ao iniciar jogo (se habilitado)
+      playMusic();
     }
 
     Game.prototype.pauseToMenu = function() {
       cancelAnimationFrame(this.loopId);
       document.removeEventListener("keydown", this.handleKeyDown);
       stopTimer(); // Para cronômetro
+      // pausa música ao ir para o menu
+      pauseMusic();
       showScreen("menu");
     }
 
@@ -1807,3 +1967,4 @@
   </body>
 
 </html>
+                      
