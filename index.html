@@ -1057,7 +1057,7 @@
 
 
   <div id="hud-username" style="position: absolute; top: 15px; right: 20px; color: black; font-weight: bold; font-size: 30px; z-index: 10; display: none;"></div>
-  <img id="boom" src="https://uploads.onecompiler.io/43rztn6g5/43unkwz55/Score14.png" alt="Boom Explosion" />
+  <img id="boom" src="https://uploads.onecompiler.io/43tk45a7t/443unzag4/Score-removebg-preview.png" alt="Boom Explosion" />
   <script>
     let isPaused = false; // Variável global que controla se o jogo está pausado
     let timerInterval;
@@ -1216,6 +1216,10 @@
         playMusic();
       }
     });
+
+
+
+
 
 
 
@@ -1963,8 +1967,137 @@
         }
       }
     });
+
+    // ==== EASTER EGG: MODO MATRIX BINÁRIO (ATIVA/DESATIVA) ====
+    (function() {
+      let secretBuffer = "";
+      let matrixCanvas = null;
+      let matrixCtx = null;
+      let matrixInterval = null;
+      let matrixResizeHandler = null;
+      let bgImagesHidden = false;
+      const maxBuffer = 12; // mantém últimas teclas
+
+      function activateBinaryMatrix() {
+        if (matrixCanvas) return; // já ativo
+
+        showNotification("🧠 MODO MATRIX BINÁRIO ATIVADO!");
+
+        // cria o canvas de fundo
+        matrixCanvas = document.createElement("canvas");
+        matrixCanvas.id = "matrix-bg";
+        matrixCanvas.style.position = "fixed";
+        matrixCanvas.style.top = "0";
+        matrixCanvas.style.left = "0";
+        matrixCanvas.style.width = "100%";
+        matrixCanvas.style.height = "100%";
+        matrixCanvas.style.zIndex = "0"; // acima dos bg-image (que têm -1) e atrás do conteúdo (telas têm z-index >=0)
+        matrixCanvas.style.background = "black";
+        matrixCanvas.style.pointerEvents = "none";
+        document.body.appendChild(matrixCanvas);
+
+        matrixCtx = matrixCanvas.getContext("2d");
+        matrixCanvas.width = window.innerWidth;
+        matrixCanvas.height = window.innerHeight;
+
+        // esconde as imagens de fundo
+        document.querySelectorAll(".bg-image").forEach(img => {
+          img.style.opacity = "0";
+        });
+        bgImagesHidden = true;
+
+        const chars = "01".split("");
+        const fontSize = 18;
+        let columns = Math.floor(matrixCanvas.width / fontSize);
+        let drops = Array(columns).fill(0);
+
+        function drawMatrix() {
+          // fundo semi-transparente pra trail
+          matrixCtx.fillStyle = "rgba(0, 0, 0, 0.08)";
+          matrixCtx.fillRect(0, 0, matrixCanvas.width, matrixCanvas.height);
+
+          matrixCtx.fillStyle = "#00FF00"; // verde neon
+          matrixCtx.font = fontSize + "px monospace";
+
+          for (let i = 0; i < drops.length; i++) {
+            const text = chars[Math.floor(Math.random() * chars.length)];
+            matrixCtx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+            if (drops[i] * fontSize > matrixCanvas.height && Math.random() > 0.975) {
+              drops[i] = 0;
+            }
+            drops[i]++;
+          }
+        }
+
+        matrixInterval = setInterval(drawMatrix, 40);
+
+        // resize handler
+        matrixResizeHandler = () => {
+          matrixCanvas.width = window.innerWidth;
+          matrixCanvas.height = window.innerHeight;
+          columns = Math.floor(matrixCanvas.width / fontSize);
+          drops = Array(columns).fill(0);
+        };
+        window.addEventListener("resize", matrixResizeHandler);
+      }
+
+      function deactivateBinaryMatrix() {
+        if (!matrixCanvas) return;
+
+        // limpa intervalos e listeners
+        clearInterval(matrixInterval);
+        matrixInterval = null;
+        if (matrixResizeHandler) {
+          window.removeEventListener("resize", matrixResizeHandler);
+          matrixResizeHandler = null;
+        }
+
+        // remove canvas
+        try {
+          matrixCanvas.remove();
+        } catch (e) {}
+        matrixCanvas = null;
+        matrixCtx = null;
+
+        // restaura imagens de fundo
+        document.querySelectorAll(".bg-image").forEach(img => {
+          img.style.opacity = "";
+        });
+        bgImagesHidden = false;
+
+        showNotification("🔁 Modo MATRIX desativado");
+      }
+
+      // escuta teclas quando estiver no menu
+      document.addEventListener("keydown", (e) => {
+        // só quando menu ativo
+        if (!document.getElementById("menu").classList.contains("active")) return;
+
+        // ignore teclas modificadoras soltas rápidas
+        if (e.key.length > 1 && !/^[a-zA-Z]$/.test(e.key)) {
+          // permite Arrow keys etc serem ignoradas
+        }
+
+        secretBuffer += e.key.toLowerCase();
+        if (secretBuffer.length > maxBuffer) secretBuffer = secretBuffer.slice(-maxBuffer);
+
+        if (secretBuffer.endsWith("matrix")) {
+          activateBinaryMatrix();
+          secretBuffer = "";
+        } else if (secretBuffer.endsWith("normal")) {
+          deactivateBinaryMatrix();
+          secretBuffer = "";
+        }
+      });
+
+      // expõe funções no escopo global caso necessário (não obrigatório)
+      window.__activateBinaryMatrix = activateBinaryMatrix;
+      window.__deactivateBinaryMatrix = deactivateBinaryMatrix;
+    })();
+    // ==== FIM EASTER EGG ====
+
   </script>
   </body>
 
 </html>
-                      
